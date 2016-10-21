@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" encoding="utf8">
+    <title>{% block title %}{% endblock %} | IMM3323</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    {% load staticfiles %}
+    <link href="{% static "semantic/semantic.min.css" %}" type="text/css" rel="stylesheet"/>
+    <script src="{% static "semantic/semantic.min.js" %}"></script>
+    <link href="{% static "css/style.css" %}" type="text/css" rel="stylesheet"/>
+    {% block more_static %}{% endblock %}
+  </head>
+
+  <body>
+    {% block body %}
+      <div class="ui fixed main menu">
+        <a class="item" href="/">
+          <i class="home icon"></i>
+        </a>
+        <div class="ui dropdown item">
+          Aplicación
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            <a class="item" href="/producto_punto">Producto Punto</a>
+          </div>
+        </div>
+        <div class="right menu">
+          <a class="item" href="">
+            <i class="info icon"></i>
+          </a>
+        </div>
+      </div>
+      <div class="main-content">
+        {% block content %}{% endblock %}
+      </div>
+    {% endblock %}
+    <div class="ui footer segment">
+      <h3></h3>
+    </div>
+  </body>
+
+  {% block last_includes %}{% endblock %}
+
+</html>
+
+<script type="text/javascript">
+  $('.ui .dropdown').dropdown();
+</script>

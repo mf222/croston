@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Producto Punto{% endblock %}
+{% block more_static %}
+  {% load staticfiles %}
+  <link href="http://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700" rel="stylesheet"/>
+  <link href="{% static 'css/style_upload.css' %}" rel="stylesheet"/>
+  <link href="{% static 'css/home.css' %}" rel="stylesheet"/>
+  <script src="{% static 'js/pr_form_validation.js' %}"></script>
+{% endblock %}
+{% block content %}
+
+  <h2 class="ui header">
+    <i class="compress icon"></i>
+    <div class="content">
+      Análisis y simulación de Croston
+      <div class="sub header">Dado un archivo se genera el modelo</div>
+    </div>
+  </h2>
+
+  <div class="ui horizontal divider"></div>
+
+  <div id="tabs-content">
+
+    <!-- TABS MENU -->
+    <div class="ui top attached tabular menu">
+      <a class="active item" data-tab="file_management">
+        Inicio
+      </a>
+    </div>
+    <!-- END OF TABS MENU -->
+
+    <!-- TAB 1 CONTENT -->
+    <div class="ui bottom attached active tab segment" data-tab="file_management">
+      <h2 class="ui center aligned dividing header" style="margin-top:10px;">
+        <div class="content">
+          Instrucciones de Uso
+        </div>
+      </h2>
+      <h2 class="ui center aligned header">
+        <div class="content">
+          <div class="sub header">
+            Suba un archivo .xlsx (excel) tal que contenta 2 hojas. La primera debe tener
+            la información de las demanda por SKU y la segunda información sobre el articulo,
+            incluyendo su leadtime. El archivo que suba debe tener la siguiente estructura
+            <br><br><br>
+            <a class="ui primary button" href="/static/estructura.xlsx" download>Descargar plantilla</a>
+          </div>
+      </h2>
+      <!--<div class="ui center aligned basic segment">
+        <p></p>
+        <a class="ui primary button" href="/static/analisis.xlsx" download>Descargar plantilla</a>
+      </div> -->
+      <div class="ui horizontal divider"></div>
+      <h2 class="ui center aligned dividing header" style="margin-top:10px;">
+        <div class="content">
+          Procesar análisis
+        </div>
+      </h2>
+      <h2 class="ui center aligned header">
+        <div class="content">
+          <div class="sub header">Suba el archivo de datos brutos con las demandas contenidas para cada SKU</div>
+        </div>
+      </h2>
+      <div class="ui centered grid">
+        <div class="column" id="dropdown_area">
+          <form id="upload" method="post" onsubmit="return false;" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ upload_form.data }}
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- END OF TAB 1 CONTENT -->
+  </div>
+
+
+{% endblock %}
+
+{% block last_includes %}
+{% load staticfiles %}
+  <script src="{% static 'js/jquery.cookie.js' %}"></script>
+  <script type="text/javascript">
+    $('.menu .item').tab();
+    app_url = '/producto_punto';
+  </script>
+{% endblock %}

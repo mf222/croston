@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Gestión de Procesos Mineros{% endblock %}
+{% block more_static %}
+  {% load staticfiles %}
+  <link href="http://fonts.googleapis.com/css?family=PT+Sans+Narrow:400,700" rel="stylesheet"/>
+  <link href="{% static 'css/style_upload.css' %}" rel="stylesheet"/>
+  <link href="{% static 'css/home.css' %}" rel="stylesheet"/>
+{% endblock %}
+{% block content %}
+  <h1 class="ui center aligned icon header">
+    <i class="settings icon"></i>
+    <div class="content">
+      Gestión de Procesos Mineros
+      <div class="sub header">Elija una aplicación</div>
+    </div>
+  </h1>
+  <div class="ui center aligned grid">
+    <div class="column">
+      <div class="ui divided list">
+        <a class="item" href="#"> </a>
+        <a class="item" href="/producto_punto">Croston</a>
+        <a class="item" href="#"> </a>
+      </div>
+    </div>
+  </div>
+{% endblock %}
