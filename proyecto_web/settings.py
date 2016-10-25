@@ -1,3 +1,4 @@
+
 """
 Django settings for proyecto_web project.
 
@@ -24,7 +25,6 @@ SECRET_KEY = ')eqmfm8ywz0z0-*2_jm3my+g)xtdeao&u^2$^so@_rh-5xgreq'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = []
 
 
@@ -100,5 +100,6 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 STATIC_URL = '/static/'
+

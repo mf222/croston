@@ -1,0 +1,3 @@
+# 2 vectores del siguiente formato (numeros separados por coma y espacio), y de igual tamaño.
+v1 = [a1, a2, a3, a4, a5]
+v2 = [b1, b2, b3, b4, b5]
