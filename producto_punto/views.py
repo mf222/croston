@@ -1,12 +1,14 @@
+import json
+import time
+
 from django.shortcuts import render
-from .data_processing import generar_output
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from .file_generation import generar_archivo
-import json
-from producto_punto.forms import *
-import time
 from django.views.decorators.http import require_http_methods
+
+from .data_processing import generar_output
+from .file_generation import generar_archivo
+from .forms import UploadForm, DownloadForm
 
 
 def home(request):
@@ -16,7 +18,7 @@ def home(request):
 
 def process_data(request):
     form = UploadForm(request.POST, request.FILES)
-    if form.is_valid():
+    if form.is_valid():  # calls UploadField.clean -> WriteToExcel
         name, elements = form.cleaned_data['data']
         html_result = generar_output(elements)
         operation_id = int(time.time())

@@ -1,5 +1,5 @@
 from django import forms
-from .widgets import *
+from .widgets import UploadFileWidget
 from .validators import validar_input
 
 
