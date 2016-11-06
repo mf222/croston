@@ -26,8 +26,8 @@ source ./virtualenv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Desactive when development is finished
-desactive
+# Deactivate when development is finished
+deactivate
 ```
 
 Create database:
