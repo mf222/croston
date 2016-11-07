@@ -1,21 +1,29 @@
 import json
 import time
 
-from django.shortcuts import render
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from django.views.decorators.http import require_http_methods
+from django.views.generic.edit import FormView
+# from django.views.decorators.http import require_http_methods
 
 from .data_processing import generar_output
-from .file_generation import generar_archivo
-from .forms import UploadForm, DownloadForm
+from .forms import UploadForm
+# from .file_generation import generar_archivo
 
 
-def home(request):
-    data = {'upload_form': UploadForm(), 'download_form': DownloadForm()}
-    return render(request, 'pr_home.html', data)
+class UploadView(FormView):
+    template_name = 'pr_home.html'
+    form_class = UploadForm
+    success_url = '/producto_punto/'  # TODO: change
+
+    def form_valid(self, form):
+        xlsx = form.cleaned_data['xlsx']
+        # TODO
+        return super(UploadView, self).form_valid(form)
+        # return super(UploadView, self).form_invalid(form)
 
 
+# TODO: What to do with this?
 def process_data(request):
     form = UploadForm(request.POST, request.FILES)
     if form.is_valid():  # calls UploadField.clean -> WriteToExcel
@@ -26,20 +34,6 @@ def process_data(request):
         tab_data = {'content': html_result, 'id': operation_id}
         data = {'menu_html': render_to_string('pr_menu.html', menu_data),
                 'tab_html': render_to_string('pr_tab.html', tab_data)}
-        print(data['tab_html'])
     else:
         data = {'error': form.errors}
     return HttpResponse(json.dumps(data), content_type="application/json")
-
-
-@require_http_methods(["POST"])
-def download_file(request):
-    form = DownloadForm(request.POST)
-    parameter = 0
-    if form.is_valid():
-        parameter = form.save()
-    filename, content = generar_archivo(parameter)
-    response = HttpResponse(content, content_type='text/csv')
-    response['Content-Length'] = len(content)
-    response['Content-Disposition'] = 'attachment; filename=' + filename
-    return response

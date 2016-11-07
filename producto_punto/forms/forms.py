@@ -1,34 +1,31 @@
 from django import forms
-from .widgets import UploadFileWidget
-from .validators import validar_input
+from multiupload.fields import MultiFileField
+from ..operations.spreadsheets import run_operation, parse_files
 
-
-class UploadField(forms.FileField):
-
-    def __init__(self, attrs):
-        super(UploadField, self).__init__()
-        self.widget = UploadFileWidget(attrs=attrs)
-
-    def clean(self, data, initial=None):
-        super(UploadField, self).clean(data)
-        data.seek(0)
-        result = validar_input(data.read())
-        if result[0]:
-            return (data.name, result[1])
-        else:
-            raise forms.ValidationError(result[1])
+ERR_MESSAGE = "Ha ocurrido un error, archivo corrupto o mal formado"
 
 
 class UploadForm(forms.Form):
+    attachments = MultiFileField(min_num=2, max_num=2)
 
-    data = UploadField(attrs={'placeholder': 'Arrastrar archivos aquí',
-                              'button_text': 'Abrir'})
+    def clean(self):
+        cleaned_data = super(UploadForm, self).clean()
 
+        file1, file2 = None, None
+        for form_file in cleaned_data.get('attachments'):
+            path = form_file.file.name
+            # form_file.file.seek(0)
+            # content = form_file.file.read()
+            if form_file._name == "INPUT1.xlsx":
+                file1 = path
+            elif form_file._name == "INPUT2.xlsx":
+                file2 = path
 
-class DownloadForm(forms.Form):
-
-    # numero_vectores = forms.IntegerField(label='Número de vectores')
-
-    def save(self):
-        cleaned_data = super(DownloadForm, self)
-        return cleaned_data
+        try:
+            xlsx = run_operation(*parse_files(file1, file2))
+            cleaned_data["xlsx"] = xlsx
+            return cleaned_data
+            # xlsx.save("producto_punto/static/analisis.xlsx")
+        except Exception as e:
+            # raise e
+            raise forms.ValidationError(ERR_MESSAGE)

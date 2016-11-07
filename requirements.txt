@@ -1,4 +1,5 @@
 Django==1.9
+django-multiupload==0.5.2
 et-xmlfile==1.0.1
 jdcal==1.3
 numpy==1.11.0
