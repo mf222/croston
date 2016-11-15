@@ -1,9 +1,7 @@
-from django.conf.urls import patterns, url  # , include
+from django.conf.urls import url  # , include
 from . import views
 
 
-urlpatterns = patterns(
-    'producto_punto.views',
+urlpatterns = [
     url(r'^$', views.UploadView.as_view(), name='home'),
-    url(r'^download_file/$', 'download_file', name='pr_download'),
-)
+]
