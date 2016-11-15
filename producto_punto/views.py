@@ -10,17 +10,21 @@ from .data_processing import generar_output
 from .forms import UploadForm
 # from .file_generation import generar_archivo
 
+# CONT = "application/vnd.ms-excel"
+CONT = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
 
 class UploadView(FormView):
-    template_name = 'pr_home.html'
+    template_name = "pr_home.html"
     form_class = UploadForm
-    success_url = '/producto_punto/'  # TODO: change
+    # success_url = "/producto_punto/"  # TODO: change
 
     def form_valid(self, form):
-        xlsx = form.cleaned_data['xlsx']
-        # TODO
-        return super(UploadView, self).form_valid(form)
-        # return super(UploadView, self).form_invalid(form)
+        xlsx = form.cleaned_data["xlsx"]
+        response = HttpResponse(content_type=CONT)
+        response["Content-Disposition"] = 'attachment; filename="output.xlsx"'
+        xlsx.save(response)
+        return response
 
 
 # TODO: What to do with this?
