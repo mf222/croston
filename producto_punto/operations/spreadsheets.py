@@ -19,11 +19,15 @@ def read_sheets(*files):
 def parse_files(file1, file2):
     sheet1, sheet2 = read_sheets(file1, file2)
 
-    leadtimes = dict()
+    leadtimes = defaultdict(lambda: [])
     for f in range(8, sheet2.nrows):
+        vector = []
         key = sheet2.cell(f, 0).value
-        val = sheet2.cell(f, sheet2.ncols - 1).value
-        leadtimes[key] = val
+        leadtime = sheet2.cell(f, sheet2.ncols - 1).value
+        actual_r = sheet2.cell(f, 10).value
+        vector.append(leadtime)
+        vector.append(actual_r)
+        leadtimes[key].append(leadtime)
 
     data = defaultdict(lambda: [])
 
@@ -49,7 +53,7 @@ def run_operation(data, leadtimes):
     ws2 = workbook.create_sheet(title="Croston")
 
     # Sheet para el gráfico
-    ws3 = workbook.create_sheet(title="p vs NS")
+    # ws3 = workbook.create_sheet(title="p vs NS")
 
     # Definir aqui el numero de veces que correra
     NUMERO_RUNS = 100
@@ -73,13 +77,14 @@ def run_operation(data, leadtimes):
             data_elements = []
             alldda = []
             alldates = []
+            no_null = 0
 
             for element in v:
-                dda = 0
                 if element[2] > 0:
                     dda = element[2]
-                alldda.append(dda)
-                alldates.append(datetime.strptime(element[1], '%d-%m-%Y'))
+                    no_null += 1
+                    alldda.append(dda)
+                    alldates.append(datetime.strptime(element[1], '%d-%m-%Y'))
 
             # Para determinar los periodos e intervalos
             alldates.sort()
@@ -97,9 +102,10 @@ def run_operation(data, leadtimes):
                 m_interval = (max_date-min_date).days
 
             # CROSTON METRICAS
-            p_croston = m_interval
+            p_croston = m_interval/no_null
             q_croston = 1
             z_croston = m_dda
+            sigma_croston = std_dda
 
             y_t = []
             y_t.append(z_croston/p_croston)
@@ -122,21 +128,28 @@ def run_operation(data, leadtimes):
             actual_dda = 0
             actual_day = alldates[0]
 
+            r_actual = 0
+            low_ns = 0
+            if k in leadtimes:
+                r_actual = data_elements.append(leadtimes[k][1])
             for i in range(period):
                 e_val = 0
                 y_t_d_val = 0 - z_croston/p_croston
                 mn_val = Mn[i]
                 shortage_val = 0
                 mn_temp = 0
-                if actual_day == v[actual_dda][1]:
+                if actual_day == datetime.strptime(v[actual_dda][1], '%d-%m-%Y'):
                     e_val = v[actual_dda][2] - z_croston
                     y_t_d_val = v[actual_dda][2] - z_croston/p_croston
+                    if y_t_d_val > r_actual:
+                        low_ns += 1
                     p_croston = (p_croston*(1-alpha))+(alpha*q_croston)
                     z_croston = (z_croston*(1-alpha))+(alpha*v[actual_dda][2])
                     q_croston = 0
                     mn_val = Mn[i]*(1-Mn[i]) + Mn[i]*abs(y_t_d_val)
                     actual_dda += 1
                     mn_temp = Mn[i]
+                    sigma_croston = sigma_croston*(1-alpha)+alpha*abs(e_val)
                 if Rt[i] < v[actual_dda][2]:
                     shortage_val = 1
                 q_croston += 1
@@ -159,16 +172,24 @@ def run_operation(data, leadtimes):
             if len(mn_nzero) == 0:
                 mn_nzero.append(0)
 
-            data_elements.append(pedidos)  # TOTAL PEDIDOS
-            data_elements.append(m_interval)  # INTERVALO
-            data_elements.append(m_dda)  # DEMANDA MEDIA
-            data_elements.append(y_t[-1])  # MU MEAN - MU
-            data_elements.append(Mn[-1])  # SIGMA
-            data_elements.append(p_croston)  # P
+            data_elements.append(pedidos)  # 0 : TOTAL PEDIDOS
+            data_elements.append(m_interval/no_null)  # 1 : INTERVALO, P AVG
+            data_elements.append(m_dda)  # 2 : DEMANDA MEDIA, MU AVG
+            # data_elements.append(std_dda)  # 3 : SIGMA
+            data_elements.append(y_t[-1])  # 4 : MU MEAN - MU
+            data_elements.append(Mn[-1])  # 5 : SIGMA ?
+            data_elements.append(p_croston)  # 6 : P
+            data_elements.append(std_dda)  # 7
+            data_elements.append(z_croston)  # 8 : Z croston
+            data_elements.append(sigma_croston)  # 9
 
             if k in leadtimes:
-                data_elements.append(leadtimes[k])
+                data_elements.append(leadtimes[k][0])  # 10 : leadtimes
+                data_elements.append(leadtimes[k][1])  # 11 : R actual
+                data_elements.append(low_ns)  # 12 : NS actual
             else:
+                data_elements.append(None)
+                data_elements.append(None)
                 data_elements.append(None)
 
             data_simulation[k] = data_elements
@@ -186,16 +207,16 @@ def run_operation(data, leadtimes):
 
             ws1.cell(row=actual_row, column=1, value=k)
             ws1.cell(row=actual_row, column=2, value=np.sum(alldda))
-            ws1.cell(row=actual_row, column=3, value=m_dda)
-            ws1.cell(row=actual_row, column=4, value=std_dda)
-            ws1.cell(row=actual_row, column=5, value=m_interval)
-            ws1.cell(row=actual_row, column=6, value=alldates[0])
-            ws1.cell(row=actual_row, column=7, value=alldates[-1])
+            ws1.cell(row=actual_row, column=3, value=round(m_dda, 2))
+            ws1.cell(row=actual_row, column=4, value=round(std_dda, 2))
+            ws1.cell(row=actual_row, column=5, value=round(m_interval, 2))
+            ws1.cell(row=actual_row, column=6, value=("{}/{}/{}".format(alldates[0].timetuple()[2], alldates[0].timetuple()[1], alldates[0].timetuple()[0])))
+            ws1.cell(row=actual_row, column=7, value=("{}/{}/{}".format(alldates[-1].timetuple()[2], alldates[-1].timetuple()[1], alldates[-1].timetuple()[0])))
             ws1.cell(row=actual_row, column=8, value=period)
-            ws1.cell(row=actual_row, column=9, value=p_croston)
-            ws1.cell(row=actual_row, column=10, value=z_croston)
-            ws1.cell(row=actual_row, column=11, value=np.sum(y_t))
-            ws1.cell(row=actual_row, column=12, value=np.mean(y_t))
+            ws1.cell(row=actual_row, column=9, value=round(p_croston, 2))
+            ws1.cell(row=actual_row, column=10, value=round(z_croston, 2))
+            ws1.cell(row=actual_row, column=11, value=round(np.sum(y_t), 2))
+            ws1.cell(row=actual_row, column=12, value=round(np.mean(y_t), 2))
             ws1.cell(row=actual_row, column=13, value=max(Rt))
             ws1.cell(row=actual_row, column=14, value=np.sum(shortage))
             ws1.cell(row=actual_row, column=15, value=np.mean(Rt))
@@ -210,15 +231,23 @@ def run_operation(data, leadtimes):
     for k, v in data_simulation.items():
         ALL_NS = []
         ALL_R_0 = []
-        for simulations in range(NUMERO_SIMU):
+        leadtime = 3
+        actual_r = "R actual no encontrado en segundo archivo"
+        actual_ns = "R actual no encontrano en segundo archivo"
+        if v[9] is not None:
+            leadtime = v[9]
+            actual_r = v[10]
+            actual_ns = 1 - v[11]/v[0]
+            if actual_ns <= 0:
+                actual_ns = 0
+            else:
+                actual_ns = str(round(actual_ns, 2)*100) + "%"
+        for simulations in range(10):
             NS = 0
             R_0 = 0
             while NS < 0.8:
                 dda = []
                 dda_desp = []
-                leadtime = 0
-                if v[6] is not None:
-                    leadtime = v[6]
                 R = []
                 R_0 += 1
                 R.append(R_0)
@@ -257,11 +286,16 @@ def run_operation(data, leadtimes):
 
         ns_mean = np.mean(NS)
         ws2.cell(row=actual_row, column=1, value=k)
-        ws2.cell(row=actual_row, column=2, value=v[3])
-        ws2.cell(row=actual_row, column=3, value=v[4])
-        ws2.cell(row=actual_row, column=4, value=v[5])
-        ws2.cell(row=actual_row, column=5, value=np.mean(R_0))
-        ws2.cell(row=actual_row, column=6, value=ns_mean)
+        ws2.cell(row=actual_row, column=2, value=round(v[2], 2))
+        ws2.cell(row=actual_row, column=3, value=round(v[6], 2))
+        ws2.cell(row=actual_row, column=4, value=round(v[1], 2))
+        ws2.cell(row=actual_row, column=5, value=round(v[7], 2))
+        ws2.cell(row=actual_row, column=6, value=round(v[8], 2))
+        ws2.cell(row=actual_row, column=7, value=round(v[5], 2))
+        ws2.cell(row=actual_row, column=8, value=actual_r)
+        ws2.cell(row=actual_row, column=9, value=np.mean(R_0))
+        ws2.cell(row=actual_row, column=10, value=actual_ns)
+        ws2.cell(row=actual_row, column=11, value="{}%".format(round(ns_mean, 2)*100))
         plot_data.append((1, ns_mean, v[5]))
         actual_row += 1
 
@@ -282,8 +316,8 @@ def run_operation(data, leadtimes):
         ws2[chr(l).upper()+str(7)].fill = fil_header
 
     for l in range(ord('a'), ord('p')):
-        ws1.column_dimensions[chr(l).upper()].width = 25
-        ws2.column_dimensions[chr(l).upper()].width = 25
+        ws1.column_dimensions[chr(l).upper()].width = 15
+        ws2.column_dimensions[chr(l).upper()].width = 15
 
     ws1['A1'] = "Metricas por item (SKU)"
     ws1.cell(row=4, column=1, value="Alpha")
@@ -294,10 +328,10 @@ def run_operation(data, leadtimes):
     ws1.cell(row=7, column=2, value="Demanda Total")
     ws1.cell(row=7, column=3, value="Demanda Promedio")
     ws1.cell(row=7, column=4, value="Desv. Estándar Demanda")
-    ws1.cell(row=7, column=5, value="Intervalo Promedio")
+    ws1.cell(row=7, column=5, value="Intervalo entre Pedidos Promedio (dias)")
     ws1.cell(row=7, column=6, value="Primer Pedido")
     ws1.cell(row=7, column=7, value="Ultimo Pedido")
-    ws1.cell(row=7, column=8, value="Tamaño Periodo (dias)")
+    ws1.cell(row=7, column=8, value="Intervalo entre Pedidos Total(dias)")
     ws1.cell(row=7, column=9, value="[p(mu)] P Gorro")
     ws1.cell(row=7, column=10, value="[z(t)] Z Gorro")
     ws1.cell(row=7, column=11, value="[y(t)] Suma demanda")
@@ -311,32 +345,37 @@ def run_operation(data, leadtimes):
 
     ws2['A1'] = "Simulacion de Croston"
     ws2.cell(row=7, column=1, value="SKU")
-    ws2.cell(row=7, column=2, value="Mu")
-    ws2.cell(row=7, column=3, value="Sigma")
-    ws2.cell(row=7, column=4, value="P")
-    ws2.cell(row=7, column=5, value="R promedio")
-    ws2.cell(row=7, column=6, value="NS promedio")
+    ws2.cell(row=7, column=2, value="Mu AVG [Muestra]")
+    ws2.cell(row=7, column=3, value="Sigma [Muestra]")
+    ws2.cell(row=7, column=4, value="P AVG [Muestra]")
+    ws2.cell(row=7, column=5, value="Mu [Croston]")
+    ws2.cell(row=7, column=6, value="Sigma [Croston]")
+    ws2.cell(row=7, column=7, value="P [Croston]")
+    ws2.cell(row=7, column=8, value="R Actual")
+    ws2.cell(row=7, column=9, value="R Recomendado")
+    ws2.cell(row=7, column=10, value="NS Actual")
+    ws2.cell(row=7, column=11, value="NS Recomendado")
     ws2.cell(row=4, column=1, value="# periodos")
     ws2.cell(row=4, column=2, value=NUMERO_RUNS)
     ws2.cell(row=5, column=1, value="# simulaciones")
     ws2.cell(row=5, column=2, value=NUMERO_SIMU)
 
-    for element in plot_data:
-        ws3.append(element)
+    # for element in plot_data:
+    #     ws3.append(element)
 
-    chart = BubbleChart()
-    chart.title = "p vs NS"
-    chart.style = 18
-    chart.x_axis.title = 'p'
-    chart.y_axis.title = 'NS'
-
-    xvalues = Reference(ws3, min_col=3, min_row=1, max_row=len(plot_data)-1)
-    yvalues = Reference(ws3, min_col=2, min_row=1, max_row=len(plot_data)-1)
-    size = Reference(ws3, min_col=1, min_row=1, max_row=len(plot_data)-1)
-    series = Series(values=yvalues, xvalues=xvalues, zvalues=size,
-                    title_from_data=True)
-    chart.series.append(series)
+    # chart = BubbleChart()
+    # chart.title = "p vs NS"
+    # chart.style = 18
+    # chart.x_axis.title = 'p'
+    # chart.y_axis.title = 'NS'
+    #
+    # xvalues = Reference(ws3, min_col=3, min_row=1, max_row=len(plot_data)-1)
+    # yvalues = Reference(ws3, min_col=2, min_row=1, max_row=len(plot_data)-1)
+    # size = Reference(ws3, min_col=1, min_row=1, max_row=len(plot_data)-1)
+    # series = Series(values=yvalues, xvalues=xvalues, zvalues=size,
+    #                 title_from_data=True)
+    # chart.series.append(series)
 
     # place the chart starting in cell E1
-    ws3.add_chart(chart, "E1")
+    # ws3.add_chart(chart, "E1")
     return workbook
