@@ -28,6 +28,7 @@ def parse_files(file1, file2):
         vector.append(leadtime)
         vector.append(actual_r)
         leadtimes[key].append(leadtime)
+        leadtimes[key].append(actual_r)
 
     data = defaultdict(lambda: [])
 
@@ -68,7 +69,7 @@ def run_operation(data, leadtimes):
 
     # Lista para el grafico
     plot_data = []
-
+    print("PASO2")
     actual_row = 7
     for k, v in data.items():
         # Solo se simulan datos que tengan más de 1 pedido
@@ -131,7 +132,11 @@ def run_operation(data, leadtimes):
             r_actual = 0
             low_ns = 0
             if k in leadtimes:
-                r_actual = data_elements.append(leadtimes[k][1])
+                print("asdasd")
+                r_actual = data_elements.append(leadtimes.get(k)[0])
+                print(r_actual)
+            if r_actual is None:
+                r_actual = 0
             for i in range(period):
                 e_val = 0
                 y_t_d_val = 0 - z_croston/p_croston
@@ -163,7 +168,7 @@ def run_operation(data, leadtimes):
                 Rt.append(np.floor(z_croston+z_croston*mn_val))
                 shortage.append(shortage_val)
                 Mn_temp.append(mn_temp)
-
+            print("PASO3")
             e_nzero = np.trim_zeros(e_mu_pow)
             mn_nzero = np.trim_zeros(Mn_temp)
 
@@ -171,9 +176,10 @@ def run_operation(data, leadtimes):
                 e_nzero.append(0)
             if len(mn_nzero) == 0:
                 mn_nzero.append(0)
-
+            print("VALOR")
+            print(p_croston)
             data_elements.append(pedidos)  # 0 : TOTAL PEDIDOS
-            data_elements.append(m_interval/no_null)  # 1 : INTERVALO, P AVG
+            data_elements.append(period/len(alldda))  # 1 : INTERVALO, P AVG
             data_elements.append(m_dda)  # 2 : DEMANDA MEDIA, MU AVG
             # data_elements.append(std_dda)  # 3 : SIGMA
             data_elements.append(y_t[-1])  # 4 : MU MEAN - MU
@@ -182,10 +188,10 @@ def run_operation(data, leadtimes):
             data_elements.append(std_dda)  # 7
             data_elements.append(z_croston)  # 8 : Z croston
             data_elements.append(sigma_croston)  # 9
-
+            print("PASO4")
             if k in leadtimes:
-                data_elements.append(leadtimes[k][0])  # 10 : leadtimes
-                data_elements.append(leadtimes[k][1])  # 11 : R actual
+                data_elements.append(leadtimes.get(k)[0])  # 10 : leadtimes
+                data_elements.append(leadtimes.get(k)[1])  # 11 : R actual
                 data_elements.append(low_ns)  # 12 : NS actual
             else:
                 data_elements.append(None)
@@ -194,7 +200,7 @@ def run_operation(data, leadtimes):
 
             data_simulation[k] = data_elements
             actual_row += 1
-
+            print("PASO5")
             if min_date is None:
                 min_date = alldates[0]
             elif alldates[0] < min_date:
@@ -204,7 +210,7 @@ def run_operation(data, leadtimes):
                 max_date = alldates[-1]
             elif alldates[-1] > max_date:
                 max_date = alldates[-1]
-
+            print("PASO6")
             ws1.cell(row=actual_row, column=1, value=k)
             ws1.cell(row=actual_row, column=2, value=np.sum(alldda))
             ws1.cell(row=actual_row, column=3, value=round(m_dda, 2))
@@ -224,11 +230,13 @@ def run_operation(data, leadtimes):
             ws1.cell(row=actual_row, column=17, value=np.mean(e_nzero))
             ws1.cell(row=actual_row, column=18, value=np.mean(mn_nzero))
 
+            print("PASO7")
     total_period = (max_date - min_date).days
 
     # INICIO SIMULACION
     actual_row = 8
     for k, v in data_simulation.items():
+        print("PASO8")
         ALL_NS = []
         ALL_R_0 = []
         leadtime = 3
@@ -237,11 +245,14 @@ def run_operation(data, leadtimes):
         if v[9] is not None:
             leadtime = v[9]
             actual_r = v[10]
-            actual_ns = 1 - v[11]/v[0]
+            print(v[10])
+            actual_ns = 1 - v[10]/v[0]
+            print(actual_ns)
             if actual_ns <= 0:
                 actual_ns = 0
             else:
                 actual_ns = str(round(actual_ns, 2)*100) + "%"
+        print("Pasdsadasd")
         for simulations in range(10):
             NS = 0
             R_0 = 0
@@ -283,15 +294,16 @@ def run_operation(data, leadtimes):
                 NS = 1 - (np.sum(y_more_R)/numero_dda)
             ALL_NS.append(NS)
             ALL_R_0.append(R_0)
-
+        print("PASO9")
         ns_mean = np.mean(NS)
+        print(v)
         ws2.cell(row=actual_row, column=1, value=k)
-        ws2.cell(row=actual_row, column=2, value=round(v[2], 2))
-        ws2.cell(row=actual_row, column=3, value=round(v[6], 2))
-        ws2.cell(row=actual_row, column=4, value=round(v[1], 2))
-        ws2.cell(row=actual_row, column=5, value=round(v[7], 2))
-        ws2.cell(row=actual_row, column=6, value=round(v[8], 2))
-        ws2.cell(row=actual_row, column=7, value=round(v[5], 2))
+        ws2.cell(row=actual_row, column=2, value=round(v[3], 2))
+        ws2.cell(row=actual_row, column=3, value=round(v[7], 2))
+        ws2.cell(row=actual_row, column=4, value=round(v[6], 2))
+        ws2.cell(row=actual_row, column=5, value=round(v[8], 2))
+        ws2.cell(row=actual_row, column=6, value=round(v[9], 2))
+        ws2.cell(row=actual_row, column=7, value=round(v[6], 2))
         ws2.cell(row=actual_row, column=8, value=actual_r)
         ws2.cell(row=actual_row, column=9, value=np.mean(R_0))
         ws2.cell(row=actual_row, column=10, value=actual_ns)

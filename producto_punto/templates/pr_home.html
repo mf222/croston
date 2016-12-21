@@ -39,11 +39,14 @@
       <h2 class="ui center aligned header">
         <div class="content">
           <div class="sub header">
-            Suba un archivo .xlsx (excel) tal que contenta 2 hojas. La primera debe tener
-            la información de las demandas por SKU y la segunda información sobre el articulo,
-            incluyendo su <i>leadtime</i>. El archivo que suba debe tener la siguiente estructura:
-            <br><br><br>
-            <a class="ui primary button" href="/static/estructura.xlsx" download>Descargar plantilla</a>
+            <p>Subir dos archivos con la información necesaria para realizar el análisis.
+            El primer archivo debe contener la información sobre el consumo por SKU, y el segundo
+            información de los parametros de reposición y leadtimes.
+            Los archivos deben tener la siguiente estructura:</p>
+            <p>
+            <a class="ui primary button" href="/static/INPUT1.xlsx" download>Demanda SKU</a></p>
+            <p>
+            <a class="ui primary button" href="/static/INPUT2.xlsx" download>Leadtime + info</a></p>
           </div>
       </h2>
       <!--<div class="ui center aligned basic segment">
@@ -58,7 +61,10 @@
       </h2>
       <h2 class="ui center aligned header">
         <div class="content">
-          <div class="sub header">Suba el archivo de datos brutos con las demandas contenidas para cada SKU</div>
+          <div class="sub header">Seleccione los archivos necesarios presionando [Browse...]. Para seleccionar multiples archivos
+          usar CTRL + click sobre cada archivo (COMMAND + click si se usa MAC). Una vez seleccionados presionar [Enviar].
+          Debera esperar hasta que se retorne un archivo llamado output.xlsx con el resultado. Esto podría tomar
+        varios minutos dependiendo del tamaño de los archivos ingresados.</div>
         </div>
       </h2>
       <div class="ui centered grid">
@@ -66,7 +72,7 @@
           <form action="" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form.as_p }}
-            <input type="submit" value="Send" />
+            <input  class="ui primary button" type="submit" value="Enviar" />
           </form>
         </div>
       </div>

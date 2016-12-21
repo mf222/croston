@@ -12,15 +12,17 @@ class UploadForm(forms.Form):
         cleaned_data = super(UploadForm, self).clean()
 
         file1, file2 = None, None
+        name = None
         for form_file in cleaned_data.get('attachments'):
             path = form_file.file.name
             # form_file.file.seek(0)
             # content = form_file.file.read()
-            if form_file._name == "INPUT1.xlsx":
+            if form_file._name == "INPUT1.xlsx" or "onsumo" in form_file._name:
                 file1 = path
-            elif form_file._name == "INPUT2.xlsx":
+            elif form_file._name == "INPUT2.xlsx" or "NP" in form_file._name:
                 file2 = path
 
+            print("PASO1")
         try:
             xlsx = run_operation(*parse_files(file1, file2))
             cleaned_data["xlsx"] = xlsx
